@@ -1,183 +1,142 @@
 fetch("train.csv")
   .then(r => r.text())
   .then(text => {
-    const data = d3.csvParse(text, d3.autoType);
+    const data = d3.csvParse(text);
 
-    /* =======================
-       1. DATA OVERVIEW
-    ======================= */
-    d3.select("#dataset-info").html(
-      `<strong>Rows:</strong> ${data.length} |
-       <strong>Columns:</strong> ${Object.keys(data[0]).length}`
-    );
+    // ---------- 1. Data Overview ----------
+    document.getElementById("dimensions").innerHTML =
+      `<strong>Rows:</strong> ${data.length}, <strong>Columns:</strong> ${Object.keys(data[0]).length}`;
 
-    // Missing values table
-    const missing = Object.keys(data[0]).map(col => ({
-      col,
-      count: data.filter(d => d[col] === null || d[col] === "").length
-    }));
-
-    const mt = d3.select("#missing-table");
-    mt.append("tr").html("<th>Feature</th><th>Missing Count</th>");
-    missing.forEach(d =>
-      mt.append("tr").html(`<td>${d.col}</td><td>${d.count}</td>`)
-    );
-
-    // Preview table
-    const pt = d3.select("#preview-table");
-    pt.append("tr")
-      .selectAll("th")
-      .data(Object.keys(data[0]))
-      .enter()
-      .append("th")
-      .text(d => d);
-
-    data.slice(0, 5).forEach(row => {
-      pt.append("tr")
-        .selectAll("td")
-        .data(Object.values(row))
-        .enter()
-        .append("td")
-        .text(d => d);
+    const missingTable = document.getElementById("missing-table");
+    missingTable.innerHTML = "<tr><th>Feature</th><th>Missing</th></tr>";
+    Object.keys(data[0]).forEach(col => {
+      const miss = data.filter(d => d[col] === "").length;
+      missingTable.innerHTML += `<tr><td>${col}</td><td>${miss}</td></tr>`;
     });
 
-    /* =======================
-       2. DEATH RATE BY CATEGORY
-    ======================= */
-    function deathRateChart(canvasId, field, title) {
-      const grouped = d3.group(data, d => d[field] ?? "Missing");
-      const labels = [];
-      const rates = [];
+    const preview = document.getElementById("preview-table");
+    preview.innerHTML =
+      "<tr>" + Object.keys(data[0]).map(c => `<th>${c}</th>`).join("") + "</tr>";
+    data.slice(0,5).forEach(row => {
+      preview.innerHTML +=
+        "<tr>" + Object.values(row).map(v => `<td>${v}</td>`).join("") + "</tr>";
+    });
 
-      grouped.forEach((v, k) => {
-        labels.push(k);
-        rates.push(
-          v.filter(d => d.Survived === 0).length / v.length
-        );
-      });
+    // ---------- Helpers ----------
+    const deathRate = (arr) =>
+      arr.filter(d => d.Survived === "0").length / arr.length;
 
-      new Chart(document.getElementById(canvasId), {
+    function catChart(canvas, feature, title) {
+      const groups = d3.group(data, d => d[feature] || "Missing");
+      new Chart(document.getElementById(canvas), {
         type: "bar",
         data: {
-          labels,
+          labels: [...groups.keys()],
           datasets: [{
             label: "Death Rate",
-            data: rates,
-            backgroundColor: "#4c78a8"
+            data: [...groups.values()].map(deathRate),
+            backgroundColor: "#5b8def"
           }]
         },
         options: {
-          plugins: { title: { display: true, text: title } },
-          scales: { y: { min: 0, max: 1 } }
+          plugins: { title: { display: true, text: title }},
+          scales: { y: { min: 0, max: 1 }}
         }
       });
     }
 
-    deathRateChart("sexChart", "Sex", "Death Rate by Sex");
-    deathRateChart("classChart", "Pclass", "Death Rate by Class");
-    deathRateChart("embarkedChart", "Embarked", "Death Rate by Embarked");
-    deathRateChart("sibspChart", "SibSp", "Death Rate by SibSp");
-    deathRateChart("parchChart", "Parch", "Death Rate by Parch");
+    // ---------- 2. Categorical ----------
+    catChart("sexChart", "Sex", "Death Rate by Sex");
+    catChart("classChart", "Pclass", "Death Rate by Class");
+    catChart("embarkedChart", "Embarked", "Death Rate by Embarked");
+    catChart("sibspChart", "SibSp", "Death Rate by SibSp");
+    catChart("parchChart", "Parch", "Death Rate by Parch");
 
-    /* =======================
-       3. NUMERICAL FEATURES
-    ======================= */
-    function numericChart(canvasId, field, title, filterMissing) {
-      const filtered = filterMissing
-        ? data.filter(d => d[field] !== null)
-        : data;
+    // ---------- 3. Numerical ----------
+    function numChart(canvas, feature, title, filterFn) {
+      const surv0 = data.filter(d => d.Survived === "0").filter(filterFn);
+      const surv1 = data.filter(d => d.Survived === "1").filter(filterFn);
 
-      const surv0 = filtered.filter(d => d.Survived === 0).map(d => d[field]);
-      const surv1 = filtered.filter(d => d.Survived === 1).map(d => d[field]);
-
-      new Chart(document.getElementById(canvasId), {
-        type: "histogram",
+      new Chart(document.getElementById(canvas), {
+        type: "bar",
         data: {
-          datasets: [
-            { label: "Died", data: surv0, backgroundColor: "#e45756" },
-            { label: "Survived", data: surv1, backgroundColor: "#72b7b2" }
-          ]
+          labels: ["Died", "Survived"],
+          datasets: [{
+            label: `Mean ${feature}`,
+            data: [
+              d3.mean(surv0, d => +d[feature]),
+              d3.mean(surv1, d => +d[feature])
+            ],
+            backgroundColor: ["#d9534f", "#5cb85c"]
+          }]
         },
         options: {
-          plugins: { title: { display: true, text: title } }
+          plugins: { title: { display: true, text: title }}
         }
       });
     }
 
-    numericChart("ageChart", "Age", "Age Distribution (Missing Excluded)", true);
-    numericChart("fareChart", "Fare", "Fare Distribution", false);
+    numChart("ageChart", "Age", "Mean Age (Age Missing Excluded)", d => d.Age !== "");
+    numChart("fareChart", "Fare", "Mean Fare", _ => true);
 
-    /* =======================
-       4. CORRELATION
-    ======================= */
+    // ---------- 4. Correlation ----------
     const encode = d => ({
-      Survived: d.Survived,
+      Survived: +d.Survived,
       Sex: d.Sex === "male" ? 1 : 0,
-      Pclass: d.Pclass,
-      Age: d.Age,
-      Fare: d.Fare,
-      Embarked:
-        d.Embarked === "S" ? 0 :
-        d.Embarked === "C" ? 1 :
-        d.Embarked === "Q" ? 2 : null
+      Pclass: +d.Pclass,
+      Age: d.Age === "" ? null : +d.Age,
+      SibSp: +d.SibSp,
+      Parch: +d.Parch,
+      Fare: +d.Fare,
+      Embarked: d.Embarked === "S" ? 0 : d.Embarked === "C" ? 1 : d.Embarked === "Q" ? 2 : null
     });
 
-    const encoded = data.map(encode);
+    const enc = data.map(encode);
 
-    function pearson(x, y) {
-      const valid = x.map((d, i) => [d, y[i]])
-        .filter(d => d[0] !== null && d[1] !== null);
-      const xs = valid.map(d => d[0]);
-      const ys = valid.map(d => d[1]);
-      const mx = d3.mean(xs), my = d3.mean(ys);
-      return d3.sum(xs.map((d, i) =>
-        (d - mx) * (ys[i] - my)
-      )) /
-      Math.sqrt(
-        d3.sum(xs.map(d => (d - mx) ** 2)) *
-        d3.sum(ys.map(d => (d - my) ** 2))
-      );
+    function corr(x, y) {
+      const f = enc.filter(d => d[x] != null && d[y] != null);
+      return d3.correlation(f, d => d[x], d => d[y]);
     }
 
-    const features = ["Sex", "Pclass", "Age", "Fare", "Embarked"];
-    const corrs = features.map(f => ({
-      feature: f,
-      corr: pearson(
-        encoded.map(d => d[f]),
-        encoded.map(d => d.Survived)
-      )
-    }));
-
-    const ct = d3.select("#correlation-table");
-    ct.append("tr").html("<th>Feature</th><th>Correlation</th>");
-    corrs.forEach(d =>
-      ct.append("tr").html(
-        `<td>${d.feature}</td><td>${d.corr.toFixed(3)}</td>`
-      )
-    );
-
-    /* Heatmap */
-    const svg = d3.select("#heatmap");
-    const scale = d3.scaleLinear().domain([-1, 1]).range(["#d73027", "#1a9850"]);
-
-    corrs.forEach((d, i) => {
-      svg.append("rect")
-        .attr("x", 150)
-        .attr("y", i * 50 + 30)
-        .attr("width", 200)
-        .attr("height", 40)
-        .attr("fill", scale(d.corr));
-
-      svg.append("text")
-        .attr("x", 10)
-        .attr("y", i * 50 + 55)
-        .text(d.feature);
-
-      svg.append("text")
-        .attr("x", 260)
-        .attr("y", i * 50 + 55)
-        .attr("fill", "white")
-        .attr("text-anchor", "middle")
-        .text(d.corr.toFixed(2));
+    const features = ["Sex","Pclass","Age","SibSp","Parch","Fare","Embarked"];
+    const corrTable = document.getElementById("corr-table");
+    corrTable.innerHTML = "<tr><th>Feature</th><th>Corr with Survived</th></tr>";
+    features.forEach(f => {
+      corrTable.innerHTML += `<tr><td>${f}</td><td>${corr(f,"Survived").toFixed(3)}</td></tr>`;
     });
+
+    // Heatmap
+    const all = ["Survived", ...features];
+    const size = 60;
+    const svg = d3.select("#heatmap");
+    const scale = d3.scaleLinear().domain([-1,1]).range(["#d73027","#1a9850"]);
+
+    all.forEach((a,i) => {
+      all.forEach((b,j) => {
+        svg.append("rect")
+          .attr("x", j*size + 80)
+          .attr("y", i*size + 20)
+          .attr("width", size)
+          .attr("height", size)
+          .attr("fill", scale(corr(a,b) || 0));
+      });
+    });
+
+    svg.selectAll("text.labelX")
+      .data(all)
+      .enter()
+      .append("text")
+      .attr("x",(d,i)=>i*size+110)
+      .attr("y",15)
+      .attr("text-anchor","end")
+      .attr("transform",(d,i)=>`rotate(-45,${i*size+110},15)`)
+      .text(d=>d);
+
+    svg.selectAll("text.labelY")
+      .data(all)
+      .enter()
+      .append("text")
+      .attr("x",10)
+      .attr("y",(d,i)=>i*size+55)
+      .text(d=>d);
   });
