@@ -2,43 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Titanic EDA – Death Factors</title>
+  <title>Titanic EDA Dashboard</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
-
 <body>
-  <h1>Titanic Dataset – Exploratory Data Analysis</h1>
+  <h1>Titanic Exploratory Data Analysis</h1>
   <p class="subtitle">
-    Objective: Identify the single most important factor associated with passenger death
-    (Survived = 0) using descriptive statistics only.
+    Identifying the most important factor associated with passenger death (Survived = 0)
   </p>
 
-  <!-- 1. DATA OVERVIEW -->
   <section class="card">
     <h2>1. Data Overview</h2>
-
-    <div id="dataset-info"></div>
-
-    <h3>Missing Values per Feature</h3>
+    <div id="dimensions"></div>
+    <h3>Missing Values</h3>
     <table id="missing-table"></table>
-
-    <h3>First 5 Rows</h3>
+    <h3>Preview (First 5 Rows)</h3>
     <table id="preview-table"></table>
-
-    <p class="note">
-      Missing data handling:
-      <br>• Age: excluded only from Age-related analysis
-      <br>• Embarked: kept as categorical (missing shown explicitly)
-      <br>• Fare: used as-is
-    </p>
   </section>
 
-  <!-- 2. CATEGORICAL DEATH RATES -->
   <section class="card">
     <h2>2. Death Rate by Categorical Features</h2>
-
     <div class="grid">
       <canvas id="sexChart"></canvas>
       <canvas id="classChart"></canvas>
@@ -48,54 +33,39 @@
     </div>
   </section>
 
-  <!-- 3. NUMERICAL FEATURES -->
   <section class="card">
     <h2>3. Numerical Feature Analysis</h2>
-
     <p class="note">
-      Age distributions exclude missing values. Fare uses all available observations.
+      Age analysis excludes missing values explicitly. Fare uses all observations.
     </p>
-
     <div class="grid">
       <canvas id="ageChart"></canvas>
       <canvas id="fareChart"></canvas>
     </div>
   </section>
 
-  <!-- 4. CORRELATION -->
   <section class="card">
     <h2>4. Correlation Analysis</h2>
-
-    <table id="correlation-table"></table>
-
-    <h3>Correlation Heatmap</h3>
-    <svg id="heatmap" width="500" height="350"></svg>
-
+    <table id="corr-table"></table>
+    <svg id="heatmap" width="520" height="520"></svg>
     <p class="note">
-      Pearson correlation measures linear association only.
-      Correlation does not imply causation.
+      Pearson correlation measures linear association only. Correlation does not imply causation.
     </p>
   </section>
 
-  <!-- 5. KEY INSIGHT -->
   <section class="card highlight">
     <h2>5. Key Insight & Conclusion</h2>
-
     <p>
-      <strong>Sex</strong> is the single most influential factor associated with passenger death.
+      <strong>Sex is the single most influential factor associated with passenger death.</strong>
     </p>
-
     <ul>
-      <li>Male passengers show the highest normalized death rate (~81%)</li>
-      <li>Female passengers show a substantially lower death rate (~26%)</li>
-      <li>This gap is the largest among all categorical features</li>
-      <li>Sex also exhibits the strongest correlation with Survived (≈ −0.54)</li>
+      <li>Male death rate ≈ 81% vs female ≈ 26%</li>
+      <li>Largest categorical death-rate gap among all features</li>
+      <li>Strongest correlation magnitude with Survived</li>
     </ul>
-
     <p>
-      Based on consistent evidence from death-rate comparisons, numerical encoding,
-      and correlation analysis, passenger sex dominates all other examined factors
-      in association with mortality.
+      This dominance is consistently confirmed by death-rate bar charts, numerical comparisons,
+      and Pearson correlation analysis.
     </p>
   </section>
 
