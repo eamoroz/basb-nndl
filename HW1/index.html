@@ -2,77 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Titanic EDA – Factors Associated with Death</title>
+  <title>Titanic EDA – Death Factors</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-
-<h1>Titanic Exploratory Data Analysis</h1>
-<p class="subtitle">
-Goal: Identify the <strong>single most important factor associated with passenger death</strong> (Survived = 0).
-</p>
-
-<section>
-  <h2>1. Data Overview</h2>
-  <div id="overview"></div>
-  <h3>Missing Values Summary</h3>
-  <table id="missing-table"></table>
-  <h3>Data Preview</h3>
-  <table id="preview-table"></table>
-</section>
-
-<section>
-  <h2>2. Death Rate by Categorical Features</h2>
-  <p class="note">
-All charts show <strong>death rate (Survived = 0)</strong>, normalized by group.
-</p>
-
-  <canvas id="sexChart"></canvas>
-  <canvas id="classChart"></canvas>
-  <canvas id="embarkedChart"></canvas>
-  <canvas id="sibspChart"></canvas>
-  <canvas id="parchChart"></canvas>
-</section>
-
-<section>
-  <h2>3. Numerical Feature Analysis</h2>
-  <p class="note">
-Missing Age values are <strong>excluded</strong>. Fare has no missing values.
-</p>
-
-  <canvas id="ageChart"></canvas>
-  <canvas id="fareChart"></canvas>
-</section>
-
-<section>
-  <h2>4. Correlation Analysis</h2>
-  <p class="note">
-Pearson correlations with Survived (binary).  
-Categorical variables are numerically encoded.  
-Correlation measures <strong>linear association only</strong> and does not imply causation.
-</p>
-
-  <table id="correlation-table"></table>
-</section>
-
-<section class="key-insight">
-  <h2>5. Key Insight</h2>
-  <p>
-Across every analysis, <strong>Sex</strong> emerges as the dominant factor associated with passenger death.
-</p>
-  <ul>
-    <li>Male death rate is dramatically higher than female.</li>
-    <li>The gap persists across passenger classes and embarkation ports.</li>
-    <li>Sex shows the strongest correlation with survival.</li>
-    <li>Effect size exceeds that of class, age, fare, or family size.</li>
-  </ul>
-  <p class="conclusion">
-<strong>Conclusion:</strong> Being male was the single most important factor associated with death on the Titanic.
+  <h1>Titanic Dataset – Exploratory Data Analysis</h1>
+  <p class="subtitle">
+    Objective: Identify the single most important factor associated with passenger death
+    (Survived = 0) using descriptive statistics only.
   </p>
-</section>
 
-<script src="app.js"></script>
-</body>
-</html>
+  <!-- 1. DATA OVERVIEW -->
+  <section class="card">
+    <h2>1. Data Overview</h2>
+
+    <div id="dataset-info"></div>
+
+    <h3>Missing Values per Feature</h3>
+    <table id="missing-table"></table>
+
+    <h3>First 5 Rows</h3>
+    <table id="preview-table"></table>
+
+    <p class="note">
+      Missing data handling:
+      <br>• Age: excluded only from Age-related analysis
+      <br>• Embarked: kept as categorical (missing shown explicitly)
+      <br>• Fare: used as-is
+    </p>
+  </section>
+
+  <!-- 2.
