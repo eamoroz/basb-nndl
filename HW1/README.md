@@ -125,8 +125,7 @@ Answer in English
 
 #### Following
 
-The dashboard is working correctly, with one exception: the graphs Death rate by age group and death rate by Fare are empty. Find the error and fix it. Send me the full code for each file that needs fixing.
+The dashboard is working correctly, with one exception: the graphs Death rate by age group and death rate by Fare are empty. Only the names of the graphs, the axes with labels and the grid are visible, but the values (bins) are not visible. Find the error and fix it. Send me the full code for each file that needs fixing.
 
 The rule: 
 - Do not change what already works and does not require changes to solve the problem of empty graphs.
-
