@@ -58,10 +58,10 @@ fetch("train.csv")
 
     function deathRateBy(feature) {
       const groups = d3.group(data, d => d[feature]);
-      return Array.from(groups, ([key, values]) => {
-        const deathRate = d3.mean(values, d => d.Survived === 0 ? 1 : 0);
-        return { key: String(key), rate: deathRate };
-      });
+      return Array.from(groups, ([key, values]) => ({
+        key: String(key),
+        rate: d3.mean(values, d => d.Survived === 0 ? 1 : 0)
+      }));
     }
 
     function barChart(canvasId, dataset, label) {
@@ -96,20 +96,17 @@ fetch("train.csv")
        3. NUMERICAL FEATURES
     ========================= */
 
-    // ✅ FIX IS HERE
     function binnedDeathRate(values, bins) {
-      const bin = d3.bin().thresholds(bins);
-      const binned = bin(values.map(d => d.value));
+      const bin = d3.bin()
+        .value(d => d.value)
+        .thresholds(bins);
 
-      return binned
-        .filter(b => b.length > 0)   // ← CRITICAL FIX
-        .map(b => {
-          const deathRate = d3.mean(b, d => d.survived === 0 ? 1 : 0);
-          return {
-            label: `${Math.round(b.x0)}–${Math.round(b.x1)}`,
-            rate: deathRate
-          };
-        });
+      const binned = bin(values);
+
+      return binned.map(b => ({
+        label: `${Math.round(b.x0)}–${Math.round(b.x1)}`,
+        rate: d3.mean(b, d => d.survived === 0 ? 1 : 0)
+      }));
     }
 
     function numericChart(canvasId, rows, label) {
@@ -135,6 +132,7 @@ fetch("train.csv")
       });
     }
 
+    // Age (exclude missing)
     const ageData = data
       .filter(d => d.Age !== null)
       .map(d => ({ value: d.Age, survived: d.Survived }));
@@ -145,6 +143,7 @@ fetch("train.csv")
       "Death Rate by Age Group"
     );
 
+    // Fare (use all)
     const fareData = data.map(d => ({ value: d.Fare, survived: d.Survived }));
 
     numericChart(
@@ -153,12 +152,14 @@ fetch("train.csv")
       "Death Rate by Fare Group"
     );
 
+    // SibSp
     numericChart(
       "sibspChart",
       deathRateBy("SibSp").map(d => ({ label: d.key, rate: d.rate })),
       "Death Rate by Siblings/Spouses"
     );
 
+    // Parch
     numericChart(
       "parchChart",
       deathRateBy("Parch").map(d => ({ label: d.key, rate: d.rate })),
@@ -191,14 +192,10 @@ fetch("train.csv")
     const survived = data.map(d => d.Survived);
 
     const correlations = [
-      { feature: "Sex (male=1)", value: pearson(
-        data.map(d => d.Sex === "male" ? 1 : 0), survived) },
-      { feature: "Pclass", value: pearson(
-        data.map(d => d.Pclass), survived) },
-      { feature: "Age", value: pearson(
-        data.map(d => d.Age), survived) },
-      { feature: "Fare", value: pearson(
-        data.map(d => d.Fare), survived) }
+      { feature: "Sex (male=1)", value: pearson(data.map(d => d.Sex === "male" ? 1 : 0), survived) },
+      { feature: "Pclass", value: pearson(data.map(d => d.Pclass), survived) },
+      { feature: "Age", value: pearson(data.map(d => d.Age), survived) },
+      { feature: "Fare", value: pearson(data.map(d => d.Fare), survived) }
     ];
 
     const corrTable = d3.select("#correlation-table");
@@ -220,8 +217,5 @@ fetch("train.csv")
       higher death rate than females, showing the largest absolute difference among all
       categorical variables. This pattern is consistently supported by multiple bar chart
       visualizations and reinforced by the strongest correlation magnitude with survival.
-      While correlation does not imply causation, the convergence of descriptive statistics
-      and visual evidence identifies Sex as the dominant factor associated with mortality
-      on the Titanic.
     `);
   });
