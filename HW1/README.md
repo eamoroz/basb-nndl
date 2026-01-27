@@ -1,4 +1,5 @@
 ### Model
+ChatGPT 5.2
 
 ### Promt
 
