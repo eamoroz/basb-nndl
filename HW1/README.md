@@ -77,6 +77,13 @@ Dashboard Structure (MANDATORY):
   - Correlation magnitude
 - Embed the conclusion directly in the dashboard text
 
+Correlation computation requirements (MANDATORY):
+- Do NOT use d3.correlation or any non-existent D3 helper functions
+- Implement Pearson correlation explicitly using basic JavaScript and d3.mean / d3.sum
+- Correlation must be computed manually from numeric arrays
+- The implementation must not rely on external plugins or experimental APIs
+- The correlation code must be robust to missing values and explicitly filter nulls
+
 Design & UX Requirements:
 - Compact, card-based layout
 - No excessive whitespace
@@ -85,6 +92,15 @@ Design & UX Requirements:
 - Readable on a single scrolling page
 - Correct arrangement of elements without overlap
 - Suitable for coursework or academic evaluation
+
+Layout constraints (MANDATORY):
+- Charts must be rendered in a strict vertical layout (one chart per row)
+- Do NOT place multiple charts side by side in the same row
+- Each chart must be wrapped in its own container
+- Fixed maximum width must be applied to each chart to prevent overlap
+- Responsive grid layouts (auto-fit / auto-fill) are NOT allowed
+- No chart elements (axes, labels, legends) may overlap or intersect
+- The dashboard must render identically without visual collisions on common screen sizes
 
 Technical Requirements:
 - Static web application
