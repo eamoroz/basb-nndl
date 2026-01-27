@@ -1,148 +1,140 @@
 fetch("train.csv")
-  .then(r => r.text())
+  .then(res => res.text())
   .then(text => {
-    const data = d3.csvParse(text, d3.autoType);
-    initDashboard(data);
+    const data = d3.csvParse(text);
+
+    data.forEach(d => {
+      d.Survived = +d.Survived;
+      d.Age = d.Age === "" ? null : +d.Age;
+      d.Fare = +d.Fare;
+      d.SibSp = +d.SibSp;
+      d.Parch = +d.Parch;
+    });
+
+    renderOverview(data);
+    categoricalCharts(data);
+    numericalCharts(data);
+    correlationTable(data);
   });
 
-function initDashboard(data) {
-  dataOverview(data);
-  categoricalCharts(data);
-  numericalCharts(data);
-  correlationAnalysis(data);
-}
-
 /* ---------- 1. DATA OVERVIEW ---------- */
-function dataOverview(data) {
-  const cols = Object.keys(data[0]);
 
-  document.getElementById("dataset-dimensions").innerText =
-    `${data.length} rows × ${cols.length} columns`;
+function renderOverview(data) {
+  const info = `
+    <p><strong>Rows:</strong> ${data.length}</p>
+    <p><strong>Columns:</strong> ${Object.keys(data[0]).length}</p>
+    <p><strong>Target variable:</strong> Survived (0 = Death, 1 = Survived)</p>
+  `;
+  document.getElementById("dataset-info").innerHTML = info;
 
-  const missing = cols.map(c => ({
-    feature: c,
-    missing: data.filter(d => d[c] === null || d[c] === "").length
-  }));
+  const missing = Object.keys(data[0]).map(col => {
+    const miss = data.filter(d => d[col] === "" || d[col] === null).length;
+    return { col, pct: (miss / data.length * 100).toFixed(1) };
+  });
 
-  renderTable("missing-table", missing, ["feature", "missing"]);
-  renderTable("preview-table", data.slice(0,5), cols);
+  document.getElementById("missing-table").innerHTML =
+    "<tr><th>Feature</th><th>Missing %</th></tr>" +
+    missing.map(d => `<tr><td>${d.col}</td><td>${d.pct}</td></tr>`).join("");
+
+  const preview = data.slice(0, 5);
+  document.getElementById("preview-table").innerHTML =
+    "<tr>" + Object.keys(preview[0]).map(h => `<th>${h}</th>`).join("") + "</tr>" +
+    preview.map(r =>
+      "<tr>" + Object.values(r).map(v => `<td>${v}</td>`).join("") + "</tr>"
+    ).join("");
 }
 
 /* ---------- 2. CATEGORICAL ---------- */
+
 function deathRate(data, key) {
-  const grouped = d3.group(data, d => d[key] ?? "Missing");
-  return Array.from(grouped, ([k, v]) => ({
-    label: k,
-    rate: v.filter(d => d.Survived === 0).length / v.length
+  const g = d3.group(data, d => d[key]);
+  return [...g].map(([k, v]) => ({
+    key: k || "Missing",
+    rate: d3.mean(v, d => d.Survived === 0)
   }));
 }
 
-function categoricalCharts(data) {
-  barChart("sexChart", deathRate(data, "Sex"), "Death Rate by Sex");
-  barChart("classChart", deathRate(data, "Pclass"), "Death Rate by Class");
-  barChart("embarkedChart", deathRate(data, "Embarked"), "Death Rate by Embarked");
-  barChart("sibspChart", deathRate(data, "SibSp"), "Death Rate by SibSp");
-  barChart("parchChart", deathRate(data, "Parch"), "Death Rate by Parch");
-}
-
-/* ---------- 3. NUMERICAL ---------- */
-function numericalCharts(data) {
-  const age = data.filter(d => d.Age !== null);
-  boxChart("ageChart", age, "Age");
-  boxChart("fareChart", data, "Fare");
-}
-
-/* ---------- 4. CORRELATION ---------- */
-function correlationAnalysis(data) {
-  const encode = d => ({
-    Survived: d.Survived,
-    Sex: d.Sex === "male" ? 1 : 0,
-    Pclass: d.Pclass,
-    Age: d.Age,
-    Fare: d.Fare,
-    SibSp: d.SibSp,
-    Parch: d.Parch,
-    Embarked:
-      d.Embarked === "C" ? 1 :
-      d.Embarked === "Q" ? 2 : 0
-  });
-
-  const encoded = data.map(encode);
-  const features = Object.keys(encoded[0]).filter(f => f !== "Survived");
-
-  const correlations = features.map(f => ({
-    Feature: f,
-    Correlation: pearson(
-      encoded.map(d => d[f]),
-      encoded.map(d => d.Survived)
-    )
-  }));
-
-  renderTable("correlation-table", correlations, ["Feature", "Correlation"]);
-}
-
-/* ---------- HELPERS ---------- */
-function pearson(x, y) {
-  const valid = x.map((v,i)=>[v,y[i]]).filter(d=>d[0]!=null);
-  const mx = d3.mean(valid, d=>d[0]);
-  const my = d3.mean(valid, d=>d[1]);
-  const num = d3.sum(valid, d => (d[0]-mx)*(d[1]-my));
-  const den = Math.sqrt(
-    d3.sum(valid, d => (d[0]-mx)**2) *
-    d3.sum(valid, d => (d[1]-my)**2)
-  );
-  return +(num / den).toFixed(3);
-}
-
-function renderTable(id, rows, cols) {
-  const table = document.getElementById(id);
-  table.innerHTML = "";
-
-  const thead = table.createTHead().insertRow();
-  cols.forEach(c => thead.insertCell().innerText = c);
-
-  const tbody = table.createTBody();
-  rows.forEach(r => {
-    const row = tbody.insertRow();
-    cols.forEach(c => row.insertCell().innerText = r[c]);
-  });
-}
-
-function barChart(id, data, title) {
+function barChart(id, labels, values, title) {
   new Chart(document.getElementById(id), {
     type: "bar",
     data: {
-      labels: data.map(d => d.label),
+      labels,
       datasets: [{
-        data: data.map(d => d.rate),
-        backgroundColor: "#6b7280"
+        data: values,
+        backgroundColor: "#4b5563"
       }]
     },
     options: {
-      plugins: { title: { display: true, text: title } },
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: title }
+      },
       scales: { y: { beginAtZero: true, max: 1 } }
     }
   });
 }
 
-function boxChart(id, data, key) {
-  const grouped = d3.group(data, d => d.Survived);
-  const stats = [0,1].map(s => {
-    const v = grouped.get(s).map(d => d[key]).filter(d => d!=null).sort(d3.ascending);
-    return d3.mean(v);
+function categoricalCharts(data) {
+  const sex = deathRate(data, "Sex");
+  barChart("sexChart", sex.map(d => d.key), sex.map(d => d.rate), "Death Rate by Sex");
+
+  const pclass = deathRate(data, "Pclass");
+  barChart("classChart", pclass.map(d => d.key), pclass.map(d => d.rate), "Death Rate by Class");
+
+  const emb = deathRate(data, "Embarked");
+  barChart("embarkedChart", emb.map(d => d.key), emb.map(d => d.rate), "Death Rate by Embarked");
+}
+
+/* ---------- 3. NUMERICAL ---------- */
+
+function numericBinned(data, key, bins) {
+  const values = data.filter(d => d[key] !== null).map(d => d[key]);
+  const scale = d3.scaleLinear().domain(d3.extent(values)).nice(bins);
+  const binner = d3.bin().domain(scale.domain()).thresholds(scale.ticks(bins));
+
+  return binner(values).map(bin => {
+    const rows = data.filter(d => d[key] >= bin.x0 && d[key] < bin.x1);
+    return {
+      label: `${bin.x0.toFixed(1)}–${bin.x1.toFixed(1)}`,
+      death: d3.mean(rows, d => d.Survived === 0)
+    };
+  });
+}
+
+function numericalCharts(data) {
+  ["Age", "Fare", "SibSp", "Parch"].forEach((k, i) => {
+    const bins = numericBinned(data, k, 6);
+    barChart(
+      ["ageChart", "fareChart", "sibspChart", "parchChart"][i],
+      bins.map(d => d.label),
+      bins.map(d => d.death),
+      `Death Rate by ${k}`
+    );
+  });
+}
+
+/* ---------- 4. CORRELATION ---------- */
+
+function correlationTable(data) {
+  const encode = d => ({
+    Survived: d.Survived,
+    Sex: d.Sex === "male" ? 1 : 0,
+    Pclass: +d.Pclass,
+    Age: d.Age,
+    Fare: d.Fare,
+    SibSp: d.SibSp,
+    Parch: d.Parch,
+    Embarked: d.Embarked === "S" ? 0 : d.Embarked === "C" ? 1 : 2
   });
 
-  new Chart(document.getElementById(id), {
-    type: "bar",
-    data: {
-      labels: ["Died", "Survived"],
-      datasets: [{
-        data: stats,
-        backgroundColor: "#9ca3af"
-      }]
-    },
-    options: {
-      plugins: { title: { display: true, text: `Mean ${key} by Survival` } }
-    }
-  });
+  const clean = data.map(encode).filter(d => d.Age !== null);
+
+  const corr = Object.keys(clean[0]).filter(k => k !== "Survived").map(k => ({
+    feature: k,
+    corr: d3.correlation(clean, d => d[k], d => d.Survived).toFixed(3)
+  }));
+
+  document.getElementById("correlation-table").innerHTML =
+    "<tr><th>Feature</th><th>Pearson Correlation</th></tr>" +
+    corr.map(d => `<tr><td>${d.feature}</td><td>${d.corr}</td></tr>`).join("");
 }
