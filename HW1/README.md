@@ -122,3 +122,11 @@ Final Output:
 - A justified and unambiguous conclusion about the main factor of the death
 
 Answer in English
+
+#### Following
+
+The dashboard is working correctly, with one exception: the graphs Death rate by age group and death rate by Fare are empty. Find the error and fix it. Send me the full code for each file that needs fixing.
+
+The rule: 
+- Do not change what already works and does not require changes to solve the problem of empty graphs.
+
