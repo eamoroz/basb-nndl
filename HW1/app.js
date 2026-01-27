@@ -16,7 +16,6 @@ fetch("train.csv")
       <p><strong>Features:</strong> ${columns.join(", ")}</p>
     `);
 
-    // Missing values table
     const missing = columns.map(col => {
       const missingCount = data.filter(d => d[col] === null || d[col] === "").length;
       return {
@@ -34,7 +33,6 @@ fetch("train.csv")
         .html(`<td>${d.feature}</td><td>${d.percent}</td>`);
     });
 
-    // Preview table
     const preview = data.slice(0, 5);
     const previewTable = d3.select("#preview-table");
 
@@ -98,17 +96,20 @@ fetch("train.csv")
        3. NUMERICAL FEATURES
     ========================= */
 
+    // ✅ FIX IS HERE
     function binnedDeathRate(values, bins) {
       const bin = d3.bin().thresholds(bins);
       const binned = bin(values.map(d => d.value));
 
-      return binned.map(b => {
-        const deathRate = d3.mean(b, d => d.survived === 0 ? 1 : 0);
-        return {
-          label: `${Math.round(b.x0)}–${Math.round(b.x1)}`,
-          rate: deathRate
-        };
-      });
+      return binned
+        .filter(b => b.length > 0)   // ← CRITICAL FIX
+        .map(b => {
+          const deathRate = d3.mean(b, d => d.survived === 0 ? 1 : 0);
+          return {
+            label: `${Math.round(b.x0)}–${Math.round(b.x1)}`,
+            rate: deathRate
+          };
+        });
     }
 
     function numericChart(canvasId, rows, label) {
@@ -134,7 +135,6 @@ fetch("train.csv")
       });
     }
 
-    // Age (exclude missing only here)
     const ageData = data
       .filter(d => d.Age !== null)
       .map(d => ({ value: d.Age, survived: d.Survived }));
@@ -145,22 +145,20 @@ fetch("train.csv")
       "Death Rate by Age Group"
     );
 
-    // Fare
     const fareData = data.map(d => ({ value: d.Fare, survived: d.Survived }));
+
     numericChart(
       "fareChart",
       binnedDeathRate(fareData, 5),
       "Death Rate by Fare Group"
     );
 
-    // SibSp
     numericChart(
       "sibspChart",
       deathRateBy("SibSp").map(d => ({ label: d.key, rate: d.rate })),
       "Death Rate by Siblings/Spouses"
     );
 
-    // Parch
     numericChart(
       "parchChart",
       deathRateBy("Parch").map(d => ({ label: d.key, rate: d.rate })),
