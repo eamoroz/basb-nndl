@@ -1,93 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Titanic EDA – Factors Associated with Death</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <title>Titanic EDA – Factors Associated with Passenger Death</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
-  <header>
-    <h1>Titanic EDA Dashboard</h1>
+
+<div class="container">
+    <h1>Titanic Dataset – Exploratory Data Analysis</h1>
     <p class="subtitle">
-      Exploratory analysis of factors associated with passenger death (Survived = 0)
+        Objective: Identify the single most important factor associated with passenger death
+        (<strong>Survived = 0</strong>) using EDA only.
     </p>
-  </header>
 
-  <main>
-    <!-- 1. DATA OVERVIEW -->
+    <!-- DATA OVERVIEW -->
     <section class="card">
-      <h2>1. Data Overview</h2>
+        <h2>1. Data Overview</h2>
 
-      <div id="dataset-info"></div>
+        <div id="dataset-info"></div>
 
-      <h3>Missing Values (%)</h3>
-      <table id="missing-table"></table>
+        <h3>Missing Values (%)</h3>
+        <table id="missing-table"></table>
 
-      <h3>Preview (First 5 Rows)</h3>
-      <table id="preview-table"></table>
+        <h3>Preview (First 5 Rows)</h3>
+        <table id="preview-table"></table>
     </section>
 
-    <!-- 2. CATEGORICAL FEATURES -->
+    <!-- CATEGORICAL -->
     <section class="card">
-      <h2>2. Death Rate by Categorical Features</h2>
-      <div class="grid-3">
-        <canvas id="sexChart"></canvas>
-        <canvas id="classChart"></canvas>
-        <canvas id="embarkedChart"></canvas>
-      </div>
+        <h2>2. Death Rate by Categorical Features</h2>
+        <p class="note">
+            Death rate = proportion of passengers with <strong>Survived = 0</strong>.
+            Missing values are shown explicitly where applicable.
+        </p>
+
+        <div class="chart-grid">
+            <canvas id="sexChart"></canvas>
+            <canvas id="pclassChart"></canvas>
+            <canvas id="embarkedChart"></canvas>
+        </div>
     </section>
 
-    <!-- 3. NUMERICAL FEATURES -->
+    <!-- NUMERICAL -->
     <section class="card">
-      <h2>3. Numerical Feature Analysis</h2>
-      <p class="note">
-        Age analysis excludes missing values only for Age-related charts.
-        No imputation is performed.
-      </p>
-      <div class="grid-2">
-        <canvas id="ageChart"></canvas>
-        <canvas id="fareChart"></canvas>
-        <canvas id="sibspChart"></canvas>
-        <canvas id="parchChart"></canvas>
-      </div>
+        <h2>3. Numerical Feature Analysis</h2>
+        <p class="note">
+            Age analysis excludes missing values explicitly. Fare, SibSp, and Parch use all observations.
+            Bars show distributions split by survival outcome.
+        </p>
+
+        <div class="chart-grid">
+            <canvas id="ageChart"></canvas>
+            <canvas id="fareChart"></canvas>
+            <canvas id="sibspChart"></canvas>
+            <canvas id="parchChart"></canvas>
+        </div>
     </section>
 
-    <!-- 4. CORRELATION -->
+    <!-- CORRELATION -->
     <section class="card">
-      <h2>4. Correlation Analysis</h2>
-      <table id="correlation-table"></table>
-      <p class="note">
-        Pearson correlation with binary Survived variable.
-        Measures linear association only. Correlation ≠ causation.
-      </p>
+        <h2>4. Correlation Analysis</h2>
+        <p class="note">
+            Pearson correlation with Survived (binary).
+            Categorical features encoded numerically.
+            <br>
+            Limitations: linear association only; correlation does not imply causation.
+        </p>
+
+        <table id="correlation-table"></table>
     </section>
 
-    <!-- 5. CONCLUSION -->
+    <!-- CONCLUSION -->
     <section class="card highlight">
-      <h2>5. Key Insight & Conclusion</h2>
-      <p>
-        <strong>Sex</strong> is the single most influential factor associated with passenger death.
-      </p>
-      <ul>
-        <li>Largest death-rate gap between categories (male vs female)</li>
-        <li>Consistent dominance across categorical analysis</li>
-        <li>Strongest absolute correlation with Survived</li>
-      </ul>
-      <p class="conclusion">
-        Male passengers experienced a substantially higher probability of death than females,
-        exceeding the effects observed for passenger class, embarkation port,
-        and all numerical features.
-      </p>
+        <h2>5. Key Insight & Conclusion</h2>
+
+        <p>
+            <strong>Sex</strong> is the single most influential factor associated with passenger death.
+        </p>
+
+        <ul>
+            <li>Largest death-rate gap observed between males and females</li>
+            <li>Consistent dominance across categorical and numerical visualizations</li>
+            <li>Highest absolute Pearson correlation with survival outcome</li>
+        </ul>
+
+        <p class="final">
+            Based on descriptive statistics, normalized death rates, multiple visual comparisons,
+            and correlation magnitude, <strong>being male is most strongly associated with death
+            aboard the Titanic</strong>.
+        </p>
     </section>
-  </main>
+</div>
 
-  <footer>
-    <p>Exploratory Data Analysis only • No predictive modeling • Client-side dashboard</p>
-  </footer>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
