@@ -1,3 +1,6 @@
+### Result
+https://eamoroz.github.io/basb-nndl/HW1/
+
 ### Model
 ChatGPT 5.2
 
