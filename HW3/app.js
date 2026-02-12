@@ -13,6 +13,7 @@ const errorElement = document.getElementById("error-message");
 
 document.addEventListener("DOMContentLoaded", async () => {
   loadReviews();
+
   sentimentPipeline = await pipeline(
     "text-classification",
     "Xenova/distilbert-base-uncased-finetuned-sst-2-english"
@@ -21,6 +22,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 analyzeBtn.addEventListener("click", analyzeRandomReview);
 
+// ========================
+// Load reviews from TSV
+// ========================
 function loadReviews() {
   fetch("reviews_test.tsv")
     .then(res => res.text())
@@ -29,12 +33,17 @@ function loadReviews() {
         header: true,
         delimiter: "\t",
         complete: results => {
-          reviews = results.data.map(r => r.text).filter(Boolean);
+          reviews = results.data
+            .map(r => r.text)
+            .filter(Boolean);
         }
       });
     });
 }
 
+// ========================
+// Main analysis flow
+// ========================
 async function analyzeRandomReview() {
   errorElement.textContent = "";
 
@@ -49,31 +58,68 @@ async function analyzeRandomReview() {
   const result = await sentimentPipeline(review);
   const { label, score } = result[0];
 
-  const sentimentText = `${label} (${(score * 100).toFixed(1)}%)`;
-  sentimentResult.textContent = sentimentText;
+  displaySentiment(label, score);
 
   const action = mapSentimentToAction(label);
 
   displayAction(action);
-  logToGoogleSheet(review, sentimentText, action);
+  logToGoogleSheet(review, `${label} (${(score * 100).toFixed(1)}%)`, action);
 }
 
+// ========================
+// Sentiment UI
+// ========================
+function displaySentiment(label, score) {
+  sentimentResult.className = "sentiment-result";
+
+  let sentimentClass = "neutral";
+  let icon = "fa-question-circle";
+
+  if (label === "POSITIVE") {
+    sentimentClass = "positive";
+    icon = "fa-thumbs-up";
+  } else if (label === "NEGATIVE") {
+    sentimentClass = "negative";
+    icon = "fa-thumbs-down";
+  }
+
+  sentimentResult.classList.add(sentimentClass);
+  sentimentResult.innerHTML = `
+      <i class="fas ${icon}"></i>
+      <span>${label} (${(score * 100).toFixed(1)}%)</span>
+  `;
+}
+
+// ========================
+// Business logic
+// ========================
 function mapSentimentToAction(label) {
   if (label === "NEGATIVE") return "OFFER_COUPON";
   if (label === "POSITIVE") return "UPSELL_PRODUCT";
   return "NO_ACTION";
 }
 
+// ========================
+// Action UI
+// ========================
 function displayAction(action) {
+  actionBox.className = "action-box";
+
   if (action === "OFFER_COUPON") {
     actionBox.textContent = "We're sorry! Here is a 10% coupon.";
+    actionBox.classList.add("coupon");
   } else if (action === "UPSELL_PRODUCT") {
     actionBox.textContent = "You might love our premium version!";
+    actionBox.classList.add("upsell");
   } else {
     actionBox.textContent = "Thanks for your feedback!";
+    actionBox.classList.add("no-action");
   }
 }
 
+// ========================
+// Logging
+// ========================
 async function logToGoogleSheet(review, sentiment, action) {
   const payload = {
     ts_iso: new Date().toISOString(),
@@ -86,10 +132,14 @@ async function logToGoogleSheet(review, sentiment, action) {
     action_taken: action
   };
 
-  await fetch(LOG_ENDPOINT, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  try {
+    await fetch(LOG_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("Logging failed:", err);
+  }
 }
