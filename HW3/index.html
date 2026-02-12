@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Decision Engine</title>
+    <title>Review Sentiment Analyzer</title>
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,10 +22,10 @@
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
         }
 
         .container {
@@ -77,35 +77,47 @@
             color: #444;
         }
 
+        /* ==== Sentiment Result ==== */
+
         .sentiment-result {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
             margin-top: 20px;
             padding: 15px;
             border-radius: 10px;
             font-weight: bold;
-            text-align: center;
             font-size: 18px;
+            background: #f8f9fa;
+            border: 2px solid transparent;
         }
 
-        .positive {
+        .sentiment-result.positive {
             color: #28a745;
-            border: 2px solid #28a745;
+            border-color: #28a745;
         }
 
-        .negative {
+        .sentiment-result.negative {
             color: #dc3545;
-            border: 2px solid #dc3545;
+            border-color: #dc3545;
         }
 
-        .neutral {
+        .sentiment-result.neutral {
             color: #ffc107;
-            border: 2px solid #ffc107;
+            border-color: #ffc107;
         }
+
+        .sentiment-result i {
+            font-size: 22px;
+        }
+
+        /* ==== Action Box ==== */
 
         .action-box {
             margin-top: 20px;
             padding: 15px;
             border-radius: 10px;
-            background: #f8f9fa;
             font-size: 16px;
             font-weight: 600;
         }
@@ -132,16 +144,17 @@
             margin-top: 15px;
             color: #dc3545;
         }
+
     </style>
 </head>
 <body>
 
 <div class="container">
 
-    <h1>AI Decision Engine</h1>
+    <h1>Review Sentiment Analyzer</h1>
 
     <button id="analyze-btn">
-        <i class="fas fa-robot"></i> Analyze Random Review
+        <i class="fas fa-random"></i> Analyze Random Review
     </button>
 
     <div class="review-card">
@@ -151,7 +164,8 @@
         </p>
 
         <div id="sentiment-result" class="sentiment-result">
-            Sentiment will appear here
+            <i class="fas fa-question-circle"></i>
+            <span>Sentiment will appear here</span>
         </div>
 
         <div id="action-box" class="action-box"></div>
