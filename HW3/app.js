@@ -1,6 +1,6 @@
 import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6/dist/transformers.min.js";
 
-const LOG_ENDPOINT = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+const LOG_ENDPOINT = "https://script.google.com/macros/s/AKfycbwbTt8XhQn8DFoQ4InfpDUshbVSM0YIh-jGwze0seM2bg6J6P_dV2YrThppoFTK-Q7LMg/exec";
 
 let reviews = [];
 let sentimentPipeline = null;
